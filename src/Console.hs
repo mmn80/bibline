@@ -13,11 +13,23 @@
 
 module Main (main) where
 
+import System.IO (stderr, hPrint, hPutStrLn)
+import Control.Monad (unless)
+import qualified Data.Text.IO as T
+import qualified Data.Text as T
 import Pipes
-import qualified Pipes.Prelude as Pipes
-import qualified Pipes.Text.IO as Text
+import qualified Pipes.Prelude as P
+import Pipes.Parse (runStateT)
+import qualified Pipes.Text as PT
+import qualified Pipes.Text.IO as PT
 import Text.Bibline
 
-main = runEffect $ (biblined Text.stdin
-         >-> Pipes.map bibItem2Text >> return ())
-         >-> Text.stdout
+main = do
+  (r, p) <- runEffect $
+              for (biblined PT.stdin >-> P.map (T.pack . show)) $
+                liftIO . T.putStr
+  hPrint stderr r
+  (used, p') <- runStateT PT.isEndOfChars p
+  unless used $ do
+    hPutStrLn stderr "Unused input:"
+    runEffect $ for p' (liftIO . T.hPutStr stderr)

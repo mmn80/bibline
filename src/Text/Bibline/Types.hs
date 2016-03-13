@@ -15,12 +15,12 @@ module Text.Bibline.Types
   (
     BibItem (..)
   , BibEntryType (..)
-  , bibEntryType2Str
   , PersonName (..)
-  , personNames2Str
   ) where
 
 import Data.List (intercalate)
+import Data.Text (Text)
+import qualified Data.Text as T
 
 data BibEntryType
   -- | An article from a journal or magazine.
@@ -78,95 +78,142 @@ data BibEntryType
   -- Optional fields: month, year, key
   | BibUnpublished
   -- | Non-standard entry type
-  | BibGenericEntry String
+  | BibGenericEntry Text
 
-bibEntryType2Str :: BibEntryType -> String
-bibEntryType2Str BibArticle          = "@article"
-bibEntryType2Str BibBook             = "@book"
-bibEntryType2Str BibBooklet          = "@booklet"
-bibEntryType2Str BibConference       = "@conference"
-bibEntryType2Str BibInBook           = "@inbook"
-bibEntryType2Str BibInCollection     = "@incollection"
-bibEntryType2Str BibInProceedings    = "@inproceedings"
-bibEntryType2Str BibManual           = "@manual"
-bibEntryType2Str BibMastersThesis    = "@mastersthesis"
-bibEntryType2Str BibMisc             = "@misc"
-bibEntryType2Str BibPhdThesis        = "@phdthesis"
-bibEntryType2Str BibProceedings      = "@proceedings"
-bibEntryType2Str BibTechReport       = "@techreport"
-bibEntryType2Str BibUnpublished      = "@unpublished"
-bibEntryType2Str (BibGenericEntry s) = '@':s
+instance Show BibEntryType where
+  showsPrec _ BibArticle          = showString "@article"
+  showsPrec _ BibBook             = showString "@book"
+  showsPrec _ BibBooklet          = showString "@booklet"
+  showsPrec _ BibConference       = showString "@conference"
+  showsPrec _ BibInBook           = showString "@inbook"
+  showsPrec _ BibInCollection     = showString "@incollection"
+  showsPrec _ BibInProceedings    = showString "@inproceedings"
+  showsPrec _ BibManual           = showString "@manual"
+  showsPrec _ BibMastersThesis    = showString "@mastersthesis"
+  showsPrec _ BibMisc             = showString "@misc"
+  showsPrec _ BibPhdThesis        = showString "@phdthesis"
+  showsPrec _ BibProceedings      = showString "@proceedings"
+  showsPrec _ BibTechReport       = showString "@techreport"
+  showsPrec _ BibUnpublished      = showString "@unpublished"
+  showsPrec _ (BibGenericEntry s) = showString $ '@':T.unpack s
+
+data PersonName = PersonName { firstName :: Text
+                             , lastName  :: Text
+                             }
+
+instance Show PersonName where
+  showsPrec _ (PersonName fs lt) = showString (T.unpack lt)
+    . showString ", " . showString (T.unpack fs)
 
 data BibItem =
   BibEntry {
-      entryKey :: String
+      entryKey :: Text
     , entryType :: BibEntryType
     -- | Publisher's address (usually just the city, but can be the full address for lesser-known publishers)
-    , bibAddress :: String
+    , bibAddress :: Text
     -- | An annotation for annotated bibliography styles (not typical)
-    , bibAnnote :: String
+    , bibAnnote :: Text
     -- | The name(s) of the author(s) (in the case of more than one author, separated by and)
     , bibAuthor :: [PersonName]
     -- | The title of the book, if only part of it is being cited
-    , bibBookTitle :: String
+    , bibBookTitle :: Text
     -- | The chapter number
-    , bibChapter :: String
+    , bibChapter :: Text
     -- | The key of the cross-referenced entry
-    , bibCrossRef :: String
+    , bibCrossRef :: Text
     -- | The edition of a book, long form (such as "First" or "Second")
-    , bibEdition :: String
+    , bibEdition :: Text
     -- | The name(s) of the editor(s)
     , bibEditor :: [PersonName]
     -- | How it was published, if the publishing method is nonstandard
-    , bibHowPublished :: String
+    , bibHowPublished :: Text
     -- | The institution that was involved in the publishing, but not necessarily the publisher
-    , bibInstitution :: String
+    , bibInstitution :: Text
     -- | The journal or magazine the work was published in
-    , bibJournal :: String
+    , bibJournal :: Text
     -- | A hidden field used for specifying or overriding the alphabetical order of entries (when the "author" and "editor" fields are missing). Note that this is very different from the key (mentioned just after this list) that is used to cite or cross-reference the entry.
-    , bibKey :: String
+    , bibKey :: Text
     -- | The month of publication (or, if unpublished, the month of creation)
-    , bibMonth :: String
+    , bibMonth :: Text
     -- | Miscellaneous extra information
-    , bibNote :: String
+    , bibNote :: Text
     -- | The "(issue) number" of a journal, magazine, or tech-report, if applicable. (Most publications have a "volume", but no "number" field.)
-    , bibNumber :: String
+    , bibNumber :: Text
     -- | The conference sponsor
-    , bibOrganization :: String
+    , bibOrganization :: Text
     -- | Page numbers, separated either by commas or double-hyphens.
-    , bibPages :: String
+    , bibPages :: Text
     -- | The publisher's name
-    , bibPublisher :: String
+    , bibPublisher :: Text
     -- | The school where the thesis was written
-    , bibSchool :: String
+    , bibSchool :: Text
     -- | The series of books the book was published in (e.g. "The Hardy Boys" or "Lecture Notes in Computer Science")
-    , bibSeries :: String
+    , bibSeries :: Text
     -- | The title of the work
-    , bibTitle :: String
+    , bibTitle :: Text
     -- | The field overriding the default type of publication (e.g. "Research Note" for techreport, "{PhD} dissertation" for phdthesis, "Section" for inbook/incollection)
-    , bibType :: String
+    , bibType :: Text
     -- | The volume of a journal or multi-volume book
-    , bibVolume :: String
+    , bibVolume :: Text
     -- | The year of publication (or, if unpublished, the year of creation)
-    , bibYear :: String
+    , bibYear :: Text
     -- | Non-standard tags
-    , bibExtraTags :: [(String, String)]
+    , bibExtraTags :: [(Text, Text)]
     }
   -- | @COMMENT for comments not taken in regard by BibTeX.
-  | BibComment String
+  | BibComment Text
   -- | `@STRING` defines abbreviations in the form of
   -- `@string { foo = "Mrs. Foo" }`
   -- which can later be used in a tag like this
   -- `author = foo # " and Mr. Bar"`
-  | BibString { stringId    :: String
-              , stringValue :: String
+  | BibString { stringId    :: Text
+              , stringValue :: Text
               }
   -- | @PREAMBLE defines how special text should be formatted.
-  | BibPreamble String
+  | BibPreamble Text
 
-data PersonName = PersonName { firstName :: String
-                             , lastName  :: String
-                             }
+instance Show BibItem where
+  showsPrec d e@(BibEntry k ty _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) =
+    showsPrec d ty . showString "{" . showText k . showString ",\n"
+    . tag2Str "address"      (bibAddress e)
+    . tag2Str "annote"       (bibAnnote e)
+    . tag2Str "author"       (personNames2Str $ bibAuthor e)
+    . tag2Str "booktitle"    (bibBookTitle e)
+    . tag2Str "chapter"      (bibChapter e)
+    . tag2Str "crossref"     (bibCrossRef e)
+    . tag2Str "edition"      (bibEdition e)
+    . tag2Str "editor"       (personNames2Str $ bibEditor e)
+    . tag2Str "howpublished" (bibHowPublished e)
+    . tag2Str "institution"  (bibInstitution e)
+    . tag2Str "journal"      (bibJournal e)
+    . tag2Str "key"          (bibKey e)
+    . tag2Str "month"        (bibMonth e)
+    . tag2Str "note"         (bibNote e)
+    . tag2Str "number"       (bibNumber e)
+    . tag2Str "organization" (bibOrganization e)
+    . tag2Str "pages"        (bibPages e)
+    . tag2Str "publisher"    (bibPublisher e)
+    . tag2Str "school"       (bibSchool e)
+    . tag2Str "series"       (bibSeries e)
+    . tag2Str "title"        (bibTitle e)
+    . tag2Str "type"         (bibType e)
+    . tag2Str "volume"       (bibVolume e)
+    . tag2Str "year"         (bibYear e)
+    . showString (unlines (xtag2str <$> bibExtraTags e))
+    . showString "}\n\n"
+    where
+      xtag2str (t, v) = T.unpack t ++ " = {" ++ T.unpack v ++ "}"
+      tag2Str t v =
+        if T.null v then id
+        else showString t . showString " = {" . showText v . showString "}"
+      personNames2Str = T.pack . intercalate " and " . map show
+  showsPrec _ (BibComment c) =
+    showString "@comment {\n" . showText c . showString "\n}\n"
+  showsPrec _ (BibString sid sv) =
+    showString "@string {\n" . showText sid . showString " = {"
+    . showText sv . showString "}\n}\n"
+  showsPrec _ (BibPreamble p) =
+    showString "@preamble {\n" . showText p . showString "\n}\n"
 
-personNames2Str :: [PersonName] -> String
-personNames2Str = intercalate " and " . map (\(PersonName fs lt) -> lt ++ ", " ++ fs)
+showText :: Text -> ShowS
+showText = showString . T.unpack
