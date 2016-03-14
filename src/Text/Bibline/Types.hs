@@ -16,10 +16,11 @@ module Text.Bibline.Types
     BibItem (..)
   , BibEntryType (..)
   , PersonName (..)
+  , emptyEntry
   ) where
 
 import Data.List (intercalate)
-import Data.Text (Text)
+import Data.Text (Text, empty)
 import qualified Data.Text as T
 
 data BibEntryType
@@ -97,13 +98,18 @@ instance Show BibEntryType where
   showsPrec _ BibUnpublished      = showString "@unpublished"
   showsPrec _ (BibGenericEntry s) = showString $ '@':T.unpack s
 
-data PersonName = PersonName { firstName :: Text
-                             , lastName  :: Text
+data PersonName = PersonName { firstName  :: Text
+                             , middleName :: Text
+                             , lastName   :: Text
+                             , nameSuffix :: Text
                              }
 
 instance Show PersonName where
-  showsPrec _ (PersonName fs lt) = showString (T.unpack lt)
-    . showString ", " . showString (T.unpack fs)
+  showsPrec _ (PersonName fn mn ln sf) =
+      showString (T.unpack ln) . showString ", "
+    . (if T.null sf then id else showString (T.unpack sf) . showString ", ")
+    . showString (T.unpack fn)
+    . (if T.null mn then id else showString " " . showString (T.unpack mn))
 
 data BibItem =
   BibEntry {
@@ -174,7 +180,7 @@ data BibItem =
 
 instance Show BibItem where
   showsPrec d e@(BibEntry k ty _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) =
-    showsPrec d ty . showString "{" . showText k . showString ",\n"
+    showsPrec d ty . showString "{" . showText k
     . tag2Str "address"      (bibAddress e)
     . tag2Str "annote"       (bibAnnote e)
     . tag2Str "author"       (personNames2Str $ bibAuthor e)
@@ -199,21 +205,28 @@ instance Show BibItem where
     . tag2Str "type"         (bibType e)
     . tag2Str "volume"       (bibVolume e)
     . tag2Str "year"         (bibYear e)
-    . showString (unlines (xtag2str <$> bibExtraTags e))
-    . showString "}\n\n"
+    . showString (concat (xtag2str <$> bibExtraTags e))
+    . showString "\n}\n\n"
     where
-      xtag2str (t, v) = T.unpack t ++ " = {" ++ T.unpack v ++ "}"
+      xtag2str (t, v) = ",\n" ++ T.unpack t ++ " = " ++ T.unpack v
       tag2Str t v =
         if T.null v then id
-        else showString t . showString " = {" . showText v . showString "}"
-      personNames2Str = T.pack . intercalate " and " . map show
+        else showString ",\n" . showString t . showString " = " . showText v
+      personNames2Str ps =
+        if null ps then empty
+        else T.pack . (++"}") . ('{':) . intercalate " and " $ map show ps
   showsPrec _ (BibComment c) =
-    showString "@comment {\n" . showText c . showString "\n}\n"
+    showString "@comment{\n" . showText c . showString "\n}\n\n"
   showsPrec _ (BibString sid sv) =
-    showString "@string {\n" . showText sid . showString " = {"
-    . showText sv . showString "}\n}\n"
+    showString "@string{\n" . showText sid . showString " = "
+    . showText sv . showString "\n}\n\n"
   showsPrec _ (BibPreamble p) =
-    showString "@preamble {\n" . showText p . showString "\n}\n"
+    showString "@preamble{\n" . showText p . showString "\n}\n\n"
 
 showText :: Text -> ShowS
 showText = showString . T.unpack
+
+emptyEntry :: BibItem
+emptyEntry = BibEntry empty BibMisc empty empty [] empty empty empty empty []
+  empty empty empty empty empty empty empty empty empty empty empty empty empty
+  empty empty empty []
