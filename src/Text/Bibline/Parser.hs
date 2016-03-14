@@ -72,11 +72,11 @@ drawToken = do
 
 expect :: Monad m => Text -> BibParser m r ()
 expect txt = do
-  (s, w) <- drawWord
+  w <- drawWord'
   unless (w == txt) $
     throwError $ BibSyntaxError $ "Expecting \"" ++ unpack txt
       ++ "\" but got " ++ if T.null w then "[END OF INPUT]"
-                          else '"' : unpack s ++ "\" ++ \"" ++ unpack w ++ "\""
+                          else "\" ++ \"" ++ unpack w ++ "\""
 
 expectChar :: Monad m => Char -> BibParser m r ()
 expectChar = expect . singleton
