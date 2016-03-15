@@ -16,7 +16,7 @@ module Main (main) where
 import System.IO (stderr, hPrint, hPutStrLn)
 import Control.Monad (unless)
 import qualified Data.Text.IO as T
-import qualified Data.Text as T
+import Data.Text (pack)
 import Pipes
 import qualified Pipes.Prelude as P
 import Pipes.Parse (runStateT)
@@ -26,7 +26,7 @@ import Text.Bibline
 
 main = do
   (r, p) <- runEffect $
-              for (biblined PT.stdin >-> P.map (T.pack . show)) $
+              for (biblined PT.stdin >-> P.map (pack . show)) $
                 liftIO . T.putStr
   hPrint stderr r
   (used, p') <- runStateT PT.isEndOfChars p

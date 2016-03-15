@@ -48,8 +48,8 @@ drawWord = go (T.empty, T.empty)
           Just txt ->
             let (s, t) = if T.null wrd then let (s', t') = T.span isSpace txt in
                                             (spc `T.append` s', t')
-                         else (spc, txt) in
-            let (w, r) = T.span (\c -> isAlphaNum c || c `elem` "-_.") t in
+                         else (spc, txt)
+                (w, r) = T.span (\c -> isAlphaNum c || c `elem` "-_.") t in
             if | T.null r ->
                    go (s, wrd `T.append` w)
                | T.null w && T.null wrd ->
@@ -76,7 +76,7 @@ expect txt = do
   unless (w == txt) $
     throwError $ BibSyntaxError $ "Expecting \"" ++ unpack txt
       ++ "\" but got " ++ if T.null w then "[END OF INPUT]"
-                          else "\" ++ \"" ++ unpack w ++ "\""
+                          else "\"" ++ unpack w ++ "\""
 
 expectChar :: Monad m => Char -> BibParser m r ()
 expectChar = expect . singleton
@@ -91,8 +91,8 @@ drawBlock isTag = go T.empty []
           else let ctx' = case T.uncons w of
                             Nothing      -> ctx
                             Just (c, wr) -> if T.null wr then updCtx c ctx
-                                            else ctx in
-               let acc' = acc `T.append` s `T.append` w in
+                                            else ctx
+                   acc' = acc `T.append` s `T.append` w in
                if null ctx' && not (T.null acc) then return
                  (if isTag then acc'
                   else T.strip $ T.dropEnd 1 $ T.drop 1 $ T.strip acc')
@@ -217,8 +217,8 @@ parsePersonName = map (mkp . map T.strip . T.splitOn (T.pack ","))
                           _  -> p1 { lastName = n3, middleName = n2
                                    , nameSuffix = T.unwords n3s }
             k2:k2s ->
-              let p1 = p0 { lastName = k1 } in
-              let f k p = case T.words k of
+              let p1 = p0 { lastName = k1 }
+                  f k p = case T.words k of
                          []     -> p
                          k':k's -> let p' = p { firstName = k' } in case k's of
                            [] -> p'
@@ -229,8 +229,8 @@ parsePersonName = map (mkp . map T.strip . T.splitOn (T.pack ","))
         p0 = PersonName T.empty T.empty T.empty T.empty
         von s = s == T.pack "von" || s == T.pack "van" || s == T.pack "der"
         stripParens txt = if T.compareLength txt 2 == GT
-                          then let h = T.head txt in
-                               let l = T.last txt in
+                          then let h = T.head txt
+                                   l = T.last txt in
                                if (h == '{' && l == '}') || (h == '"' && l == '"')
                                then T.dropEnd 1 $ T.drop 1 txt
                                else txt
