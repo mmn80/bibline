@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Main
@@ -26,7 +28,7 @@ import           System.IO           (hPrint, hPutStrLn, stderr)
 import           Text.Bibline
 import           Text.Read           (Lexeme (..), lexP, parens, readPrec)
 
-data OutputFormat = Compact | BibTeX
+data OutputFormat = Compact | BibTeX deriving (Eq)
 
 data SortOrder = Unsorted | SortByTitle | SortByAuthor | SortByYear
 
@@ -105,12 +107,16 @@ main = execParser opts >>= bibline
   where
     opts = info (helper <*> optsParser)
       ( fullDesc
-     <> progDesc "Reads BibTeX on stdin and outputs a list (see options)"
+     <> progDesc "Reads BibTeX on stdin and outputs a possibly filtered and \
+                   \sorted list of entries using either BibTeX or a \
+                   \compact human friendly format"
      <> header "bibline - utility for processing BibTeX files" )
 
-bibline opts = do
+bibline :: Options -> IO ()
+bibline Options {..} = do
+  let format = if optFormat == Compact then showEntryCompact else show
   (r, p) <- runEffect $
-              for (biblined PT.stdin >-> P.map (pack . show)) $
+              for (biblined PT.stdin >-> P.map (pack . format)) $
                 liftIO . T.putStr
   hPrint stderr r
   (used, p') <- runStateT PT.isEndOfChars p

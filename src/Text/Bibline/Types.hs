@@ -1,4 +1,6 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase      #-}
+{-# LANGUAGE MultiWayIf      #-}
+{-# LANGUAGE RecordWildCards #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -19,12 +21,15 @@ module Text.Bibline.Types
   , BibEntryType (..)
   , PersonName (..)
   , emptyEntry
+  , showEntryCompact
+  , stripParens
   ) where
 
-import           Data.List (intercalate)
-import           Data.Text (Text, empty)
-import qualified Data.Text as T
-import           Text.Read (Lexeme (..), lexP, parens, readPrec)
+import           Data.List   (intercalate)
+import           Data.Monoid ((<>))
+import           Data.Text   (Text, empty, pack, unpack)
+import qualified Data.Text   as T
+import           Text.Read   (Lexeme (..), lexP, parens, readPrec)
 
 data BibEntryType
   -- | An article from a journal or magazine.
@@ -99,7 +104,7 @@ instance Show BibEntryType where
   showsPrec _ BibProceedings      = showString "@proceedings"
   showsPrec _ BibTechReport       = showString "@techreport"
   showsPrec _ BibUnpublished      = showString "@unpublished"
-  showsPrec _ (BibGenericEntry s) = showString $ '@':T.unpack s
+  showsPrec _ (BibGenericEntry s) = showString $ '@':unpack s
 
 instance Read BibEntryType where
   readPrec =  parens $ do
@@ -119,7 +124,7 @@ instance Read BibEntryType where
       "proceedings"   -> BibProceedings
       "techreport"    -> BibTechReport
       "unpublished"   -> BibUnpublished
-      ty              -> BibGenericEntry $ T.pack ty
+      ty              -> BibGenericEntry $ pack ty
 
 data PersonName = PersonName { firstName  :: Text
                              , middleName :: Text
@@ -129,10 +134,10 @@ data PersonName = PersonName { firstName  :: Text
 
 instance Show PersonName where
   showsPrec _ (PersonName fn mn ln sf) =
-      showString (T.unpack ln) . showString ", "
-    . (if T.null sf then id else showString (T.unpack sf) . showString ", ")
-    . showString (T.unpack fn)
-    . (if T.null mn then id else showString " " . showString (T.unpack mn))
+      showString (unpack ln) . showString ", "
+    . (if T.null sf then id else showString (unpack sf) . showString ", ")
+    . showString (unpack fn)
+    . (if T.null mn then id else showString " " . showString (unpack mn))
 
 data BibItem =
   BibEntry {
@@ -202,42 +207,42 @@ data BibItem =
   | BibPreamble Text
 
 instance Show BibItem where
-  showsPrec d e@(BibEntry k ty _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _) =
-    showsPrec d ty . showString "{" . showText k
-    . tag2Str "address"      (bibAddress e)
-    . tag2Str "annote"       (bibAnnote e)
-    . tag2Str "author"       (personNames2Str $ bibAuthor e)
-    . tag2Str "booktitle"    (bibBookTitle e)
-    . tag2Str "chapter"      (bibChapter e)
-    . tag2Str "crossref"     (bibCrossRef e)
-    . tag2Str "edition"      (bibEdition e)
-    . tag2Str "editor"       (personNames2Str $ bibEditor e)
-    . tag2Str "howpublished" (bibHowPublished e)
-    . tag2Str "institution"  (bibInstitution e)
-    . tag2Str "journal"      (bibJournal e)
-    . tag2Str "key"          (bibKey e)
-    . tag2Str "month"        (bibMonth e)
-    . tag2Str "note"         (bibNote e)
-    . tag2Str "number"       (bibNumber e)
-    . tag2Str "organization" (bibOrganization e)
-    . tag2Str "pages"        (bibPages e)
-    . tag2Str "publisher"    (bibPublisher e)
-    . tag2Str "school"       (bibSchool e)
-    . tag2Str "series"       (bibSeries e)
-    . tag2Str "title"        (bibTitle e)
-    . tag2Str "type"         (bibType e)
-    . tag2Str "volume"       (bibVolume e)
-    . tag2Str "year"         (bibYear e)
-    . showString (concat (xtag2str <$> bibExtraTags e))
+  showsPrec d BibEntry {..} =
+    showsPrec d entryType . showString "{" . showText entryKey
+    . tag2Str "address"      bibAddress
+    . tag2Str "annote"       bibAnnote
+    . tag2Str "author"       (personNames2Str bibAuthor)
+    . tag2Str "booktitle"    bibBookTitle
+    . tag2Str "chapter"      bibChapter
+    . tag2Str "crossref"     bibCrossRef
+    . tag2Str "edition"      bibEdition
+    . tag2Str "editor"       (personNames2Str bibEditor)
+    . tag2Str "howpublished" bibHowPublished
+    . tag2Str "institution"  bibInstitution
+    . tag2Str "journal"      bibJournal
+    . tag2Str "key"          bibKey
+    . tag2Str "month"        bibMonth
+    . tag2Str "note"         bibNote
+    . tag2Str "number"       bibNumber
+    . tag2Str "organization" bibOrganization
+    . tag2Str "pages"        bibPages
+    . tag2Str "publisher"    bibPublisher
+    . tag2Str "school"       bibSchool
+    . tag2Str "series"       bibSeries
+    . tag2Str "title"        bibTitle
+    . tag2Str "type"         bibType
+    . tag2Str "volume"       bibVolume
+    . tag2Str "year"         bibYear
+    . showString (concat (xtag2str <$> bibExtraTags))
     . showString "\n}\n\n"
     where
-      xtag2str (t, v) = ",\n" ++ T.unpack t ++ " = " ++ T.unpack v
+      xtag2str (t, v) = ",\n" ++ unpack t ++ " = " ++ unpack v
       tag2Str t v =
         if T.null v then id
         else showString ",\n" . showString t . showString " = " . showText v
       personNames2Str ps =
         if null ps then empty
-        else T.pack . (++"}") . ('{':) . intercalate " and " $ map show ps
+        else pack . (++"}") . ('{':) . intercalate " and " $ map show ps
   showsPrec _ (BibComment c) =
     showString "@comment{\n" . showText c . showString "\n}\n\n"
   showsPrec _ (BibString sid sv) =
@@ -247,7 +252,36 @@ instance Show BibItem where
     showString "@preamble{\n" . showText p . showString "\n}\n\n"
 
 showText :: Text -> ShowS
-showText = showString . T.unpack
+showText = showString . unpack
+
+format :: Int -> Text -> String
+format l txt = if | len < l -> str ++ replicate (l - len) ' '
+                  | l > 4 && len > l - 3 -> take (l - 3) str ++ "..."
+                  | len > l -> take l str
+                  | otherwise -> str
+  where str  = unpack txt'
+        txt' = stripParens txt
+        len  = T.length txt'
+
+persons2Str :: [PersonName] -> Text
+persons2Str = T.intercalate (pack ", ") . map lastName
+
+showEntryCompact :: BibItem -> String
+showEntryCompact BibEntry {..} = format 4 bibYear ++ " "
+  ++ format 16 (persons2Str bibAuthor) ++ " " ++ format 58 bibTitle
+showEntryCompact (BibComment c) = "comment: " ++ unpack c
+showEntryCompact (BibString sid sv) = format 80 $ pack "string: " <> sid
+                                               <> pack " = " <> sv
+showEntryCompact (BibPreamble p) = format 80 $ pack "preamble" <> p
+
+stripParens :: Text -> Text
+stripParens txt = if T.compareLength txt 2 == GT
+                  then let h = T.head txt
+                           l = T.last txt in
+                       if (h == '{' && l == '}') || (h == '"' && l == '"')
+                       then T.dropEnd 1 $ T.drop 1 txt
+                       else txt
+                  else txt
 
 emptyEntry :: BibItem
 emptyEntry = BibEntry empty BibMisc empty empty [] empty empty empty empty []

@@ -143,7 +143,7 @@ itemParser = runExceptT $ do
        initE <- case T.uncons ek of
          Nothing -> throwError $ BibSyntaxError err
          Just (c, _) -> if isAlphaNum c
-                        then return emptyEntry { entryType = str2EntryType ty
+                        then return emptyEntry { entryType = read ty
                                                , entryKey  = ek }
                         else throwError $ BibSyntaxError err
        expectChar ','
@@ -181,24 +181,6 @@ itemParser = runExceptT $ do
                "year"         -> it { bibYear = v }
                _              -> it { bibExtraTags = bibExtraTags it ++ [(t, v)] }
 
-str2EntryType :: String -> BibEntryType
-str2EntryType = \case
-  "article"       -> BibArticle
-  "book"          -> BibBook
-  "booklet"       -> BibBooklet
-  "conference"    -> BibConference
-  "inbook"        -> BibInBook
-  "incollection"  -> BibInCollection
-  "inproceedings" -> BibInProceedings
-  "manual"        -> BibManual
-  "mastersthesis" -> BibMastersThesis
-  "misc"          -> BibMisc
-  "phdthesis"     -> BibPhdThesis
-  "proceedings"   -> BibProceedings
-  "techreport"    -> BibTechReport
-  "unpublished"   -> BibUnpublished
-  ty              -> BibGenericEntry $ T.pack ty
-
 parsePersonName :: Text -> [PersonName]
 parsePersonName = map (mkp . map T.strip . T.splitOn (T.pack ","))
     . T.splitOn (T.pack " and ") . stripParens . T.strip
@@ -229,10 +211,3 @@ parsePersonName = map (mkp . map T.strip . T.splitOn (T.pack ","))
                 _  -> f (T.unwords k2s) $ p1 { nameSuffix = k2 }
         p0 = PersonName T.empty T.empty T.empty T.empty
         von s = s == T.pack "von" || s == T.pack "van" || s == T.pack "der"
-        stripParens txt = if T.compareLength txt 2 == GT
-                          then let h = T.head txt
-                                   l = T.last txt in
-                               if (h == '{' && l == '}') || (h == '"' && l == '"')
-                               then T.dropEnd 1 $ T.drop 1 txt
-                               else txt
-                          else txt
