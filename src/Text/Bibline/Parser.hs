@@ -29,8 +29,8 @@ import           Pipes
 import           Pipes.Parse
 import           Text.Bibline.Types
 
-data BibParseResult = BibParseResultOk
-                    | BibSyntaxError String
+data BibParseResult = BibParseResultOk | BibSyntaxError String
+  deriving (Eq)
 
 instance Show BibParseResult where
   show BibParseResultOk = "Parsing finished with success."

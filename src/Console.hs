@@ -118,7 +118,7 @@ bibline Options {..} = do
   (r, p) <- runEffect $
               for (biblined PT.stdin >-> P.map (pack . format)) $
                 liftIO . T.putStr
-  hPrint stderr r
+  unless (r == BibParseResultOk) $ hPrint stderr r
   (used, p') <- runStateT PT.isEndOfChars p
   unless used $ do
     hPutStrLn stderr "Unused input:"
