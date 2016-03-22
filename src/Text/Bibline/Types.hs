@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Text.Bibline.Types
@@ -22,6 +24,7 @@ module Text.Bibline.Types
 import           Data.List (intercalate)
 import           Data.Text (Text, empty)
 import qualified Data.Text as T
+import           Text.Read (Lexeme (..), lexP, parens, readPrec)
 
 data BibEntryType
   -- | An article from a journal or magazine.
@@ -97,6 +100,26 @@ instance Show BibEntryType where
   showsPrec _ BibTechReport       = showString "@techreport"
   showsPrec _ BibUnpublished      = showString "@unpublished"
   showsPrec _ (BibGenericEntry s) = showString $ '@':T.unpack s
+
+instance Read BibEntryType where
+  readPrec =  parens $ do
+    Ident s <- lexP
+    return $ case s of
+      "article"       -> BibArticle
+      "book"          -> BibBook
+      "booklet"       -> BibBooklet
+      "conference"    -> BibConference
+      "inbook"        -> BibInBook
+      "incollection"  -> BibInCollection
+      "inproceedings" -> BibInProceedings
+      "manual"        -> BibManual
+      "mastersthesis" -> BibMastersThesis
+      "misc"          -> BibMisc
+      "phdthesis"     -> BibPhdThesis
+      "proceedings"   -> BibProceedings
+      "techreport"    -> BibTechReport
+      "unpublished"   -> BibUnpublished
+      ty              -> BibGenericEntry $ T.pack ty
 
 data PersonName = PersonName { firstName  :: Text
                              , middleName :: Text
