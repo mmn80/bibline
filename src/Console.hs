@@ -13,16 +13,16 @@
 
 module Main (main) where
 
-import System.IO (stderr, hPrint, hPutStrLn)
-import Control.Monad (unless)
-import qualified Data.Text.IO as T
-import Data.Text (pack)
-import Pipes
+import           Control.Monad (unless)
+import           Data.Text     (pack)
+import qualified Data.Text.IO  as T
+import           Pipes
+import           Pipes.Parse   (runStateT)
 import qualified Pipes.Prelude as P
-import Pipes.Parse (runStateT)
-import qualified Pipes.Text as PT
+import qualified Pipes.Text    as PT
 import qualified Pipes.Text.IO as PT
-import Text.Bibline
+import           System.IO     (hPrint, hPutStrLn, stderr)
+import           Text.Bibline
 
 main = do
   (r, p) <- runEffect $

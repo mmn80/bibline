@@ -1,4 +1,5 @@
-{-# LANGUAGE LambdaCase, MultiWayIf #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiWayIf #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -20,13 +21,13 @@ module Text.Bibline.Parser
   , BibParseResult (..)
   ) where
 
-import Data.Char (isAlphaNum, isSpace)
-import Data.Text (Text, singleton, unpack)
-import qualified Data.Text as T
-import Control.Monad.Except
-import Pipes
-import Pipes.Parse
-import Text.Bibline.Types
+import           Control.Monad.Except
+import           Data.Char            (isAlphaNum, isSpace)
+import           Data.Text            (Text, singleton, unpack)
+import qualified Data.Text            as T
+import           Pipes
+import           Pipes.Parse
+import           Text.Bibline.Types
 
 data BibParseResult = BibParseResultOk
                     | BibSyntaxError String

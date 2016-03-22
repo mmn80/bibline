@@ -19,8 +19,8 @@ module Text.Bibline.Types
   , emptyEntry
   ) where
 
-import Data.List (intercalate)
-import Data.Text (Text, empty)
+import           Data.List (intercalate)
+import           Data.Text (Text, empty)
 import qualified Data.Text as T
 
 data BibEntryType
@@ -113,58 +113,58 @@ instance Show PersonName where
 
 data BibItem =
   BibEntry {
-      entryKey :: Text
-    , entryType :: BibEntryType
+      entryKey        :: Text
+    , entryType       :: BibEntryType
     -- | Publisher's address (usually just the city, but can be the full address for lesser-known publishers)
-    , bibAddress :: Text
+    , bibAddress      :: Text
     -- | An annotation for annotated bibliography styles (not typical)
-    , bibAnnote :: Text
+    , bibAnnote       :: Text
     -- | The name(s) of the author(s) (in the case of more than one author, separated by and)
-    , bibAuthor :: [PersonName]
+    , bibAuthor       :: [PersonName]
     -- | The title of the book, if only part of it is being cited
-    , bibBookTitle :: Text
+    , bibBookTitle    :: Text
     -- | The chapter number
-    , bibChapter :: Text
+    , bibChapter      :: Text
     -- | The key of the cross-referenced entry
-    , bibCrossRef :: Text
+    , bibCrossRef     :: Text
     -- | The edition of a book, long form (such as "First" or "Second")
-    , bibEdition :: Text
+    , bibEdition      :: Text
     -- | The name(s) of the editor(s)
-    , bibEditor :: [PersonName]
+    , bibEditor       :: [PersonName]
     -- | How it was published, if the publishing method is nonstandard
     , bibHowPublished :: Text
     -- | The institution that was involved in the publishing, but not necessarily the publisher
-    , bibInstitution :: Text
+    , bibInstitution  :: Text
     -- | The journal or magazine the work was published in
-    , bibJournal :: Text
+    , bibJournal      :: Text
     -- | A hidden field used for specifying or overriding the alphabetical order of entries (when the "author" and "editor" fields are missing). Note that this is very different from the key (mentioned just after this list) that is used to cite or cross-reference the entry.
-    , bibKey :: Text
+    , bibKey          :: Text
     -- | The month of publication (or, if unpublished, the month of creation)
-    , bibMonth :: Text
+    , bibMonth        :: Text
     -- | Miscellaneous extra information
-    , bibNote :: Text
+    , bibNote         :: Text
     -- | The "(issue) number" of a journal, magazine, or tech-report, if applicable. (Most publications have a "volume", but no "number" field.)
-    , bibNumber :: Text
+    , bibNumber       :: Text
     -- | The conference sponsor
     , bibOrganization :: Text
     -- | Page numbers, separated either by commas or double-hyphens.
-    , bibPages :: Text
+    , bibPages        :: Text
     -- | The publisher's name
-    , bibPublisher :: Text
+    , bibPublisher    :: Text
     -- | The school where the thesis was written
-    , bibSchool :: Text
+    , bibSchool       :: Text
     -- | The series of books the book was published in (e.g. "The Hardy Boys" or "Lecture Notes in Computer Science")
-    , bibSeries :: Text
+    , bibSeries       :: Text
     -- | The title of the work
-    , bibTitle :: Text
+    , bibTitle        :: Text
     -- | The field overriding the default type of publication (e.g. "Research Note" for techreport, "{PhD} dissertation" for phdthesis, "Section" for inbook/incollection)
-    , bibType :: Text
+    , bibType         :: Text
     -- | The volume of a journal or multi-volume book
-    , bibVolume :: Text
+    , bibVolume       :: Text
     -- | The year of publication (or, if unpublished, the year of creation)
-    , bibYear :: Text
+    , bibYear         :: Text
     -- | Non-standard tags
-    , bibExtraTags :: [(Text, Text)]
+    , bibExtraTags    :: [(Text, Text)]
     }
   -- | @COMMENT for comments not taken in regard by BibTeX.
   | BibComment Text
