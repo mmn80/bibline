@@ -23,9 +23,10 @@ module Text.Bibline.Types
   , emptyEntry
   , showEntryCompact
   , stripParens
+  , bibKeywords
   ) where
 
-import           Data.List   (intercalate)
+import           Data.List   (intercalate, find)
 import           Data.Monoid ((<>))
 import           Data.Text   (Text, empty, pack, unpack)
 import qualified Data.Text   as T
@@ -88,6 +89,7 @@ data BibEntryType
   | BibUnpublished
   -- | Non-standard entry type
   | BibGenericEntry Text
+  deriving (Eq)
 
 instance Show BibEntryType where
   showsPrec _ BibArticle          = showString "@article"
@@ -287,3 +289,7 @@ emptyEntry :: BibItem
 emptyEntry = BibEntry empty BibMisc empty empty [] empty empty empty empty []
   empty empty empty empty empty empty empty empty empty empty empty empty empty
   empty empty empty []
+
+bibKeywords :: [(Text, Text)] -> [Text]
+bibKeywords t = T.strip <$> T.split (== ',') ks
+  where ks = stripParens $ maybe T.empty snd $ find ((== pack "keywords") . fst) t
