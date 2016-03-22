@@ -256,7 +256,7 @@ showText = showString . unpack
 
 format :: Int -> Text -> String
 format l txt = if | len < l -> str ++ replicate (l - len) ' '
-                  | l > 4 && len > l - 3 -> take (l - 3) str ++ "..."
+                  | l > 4 && len > l - 2 -> take (l - 2) str ++ ".."
                   | len > l -> take l str
                   | otherwise -> str
   where str  = unpack txt'
