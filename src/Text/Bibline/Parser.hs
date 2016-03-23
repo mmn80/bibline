@@ -179,7 +179,11 @@ itemParser = runExceptT $ do
                "type"         -> it { bibType = v }
                "volume"       -> it { bibVolume = v }
                "year"         -> it { bibYear = v }
+               "keywords"     -> it { bibKeywords = parseKeywords v }
                _              -> it { bibExtraTags = bibExtraTags it ++ [(t, v)] }
+
+parseKeywords :: Text -> [Text]
+parseKeywords = fmap T.strip . T.split (== ',')
 
 parsePersonName :: Text -> [PersonName]
 parsePersonName = map (mkp . map T.strip . T.splitOn (T.pack ","))

@@ -23,10 +23,9 @@ module Text.Bibline.Types
   , emptyEntry
   , showEntryCompact
   , stripParens
-  , bibKeywords
   ) where
 
-import           Data.List   (intercalate, find)
+import           Data.List   (intercalate)
 import           Data.Monoid ((<>))
 import           Data.Text   (Text, empty, pack, unpack)
 import qualified Data.Text   as T
@@ -193,6 +192,8 @@ data BibItem =
     , bibVolume       :: Text
     -- | The year of publication (or, if unpublished, the year of creation)
     , bibYear         :: Text
+    -- | Author and user keywords
+    , bibKeywords     :: [Text]
     -- | Non-standard tags
     , bibExtraTags    :: [(Text, Text)]
     }
@@ -235,6 +236,7 @@ instance Show BibItem where
     . tag2Str "type"         bibType
     . tag2Str "volume"       bibVolume
     . tag2Str "year"         bibYear
+    . tag2Str "keywords"     (T.intercalate (pack ", ") bibKeywords)
     . showString (concat (xtag2str <$> bibExtraTags))
     . showString "\n}\n\n"
     where
@@ -288,8 +290,4 @@ stripParens txt = if T.compareLength txt 2 == GT
 emptyEntry :: BibItem
 emptyEntry = BibEntry empty BibMisc empty empty [] empty empty empty empty []
   empty empty empty empty empty empty empty empty empty empty empty empty empty
-  empty empty empty []
-
-bibKeywords :: [(Text, Text)] -> [Text]
-bibKeywords t = T.strip <$> T.split (== ',') ks
-  where ks = stripParens $ maybe T.empty snd $ find ((== pack "keywords") . fst) t
+  empty empty empty [] []

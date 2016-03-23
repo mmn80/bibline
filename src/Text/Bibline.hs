@@ -82,7 +82,7 @@ trickle Options {..} BibEntry {..} =
      | not $ null optAuthor -> any (match $ pack optAuthor) $ map (pack . show) bibAuthor
      | not $ null optTitle  -> match (pack optTitle) $ stripParens bibTitle
      | not $ null optYear   -> match (pack optYear) $ stripParens bibYear
-     | not $ null optTag    -> any (match $ pack optTag) $ bibKeywords bibExtraTags
+     | not $ null optTag    -> any (match $ pack optTag) bibKeywords
      | otherwise -> True
 trickle _ _ = True
 
