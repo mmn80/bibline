@@ -83,16 +83,18 @@ bibline :: Options -> IO ()
 bibline opt@Options {..} = do
   let format = pack . if optFormat == Compact then showEntryCompact else show
   let noFilter = null optType && all null [optKey, optAuthor, optTitle, optYear, optTag]
-  let pipeline = biblined PT.stdin
-             >-> P.filter (if noFilter then const True else trickle opt)
-             >-> (if optOpen then openFilePipe optOpenCmd else cat)
+  let fp = biblined PT.stdin
+       >-> P.filter (if noFilter then const True else trickle opt)
+  let runPipe p = runEffect $ for (p
+              >-> (if optOpen then openFilePipe optOpenCmd else cat)
+              >-> P.map format) $ liftIO . T.putStr
   (r, p) <-
     if optSortBy == Unsorted
-    then runEffect $ for (pipeline >-> P.map format) $ liftIO . T.putStr
+    then runPipe fp
     else do
-      (bs, r) <- P.toListM' pipeline
-      let bs' = format <$> sortItems optSortBy optSortOrder bs
-      runEffect $ for (each bs') $ liftIO . T.putStr
+      (bs, r) <- P.toListM' fp
+      let bs' = sortItems optSortBy optSortOrder bs
+      runPipe $ each bs'
       return r
   unless (r == BibParseResultOk) $ do
     hPrint stderr r
