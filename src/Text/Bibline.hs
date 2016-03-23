@@ -122,13 +122,12 @@ sortItems sf so = sortBy (cmp `on` fld)
 
 trickle :: Options -> BibItem -> Bool
 trickle Options {..} BibEntry {..} =
-  if | not $ null optType   -> fromJust optType == entryType
-     | not $ null optKey    -> match (pack optKey) $ stripParens entryKey
-     | not $ null optAuthor -> any (match $ pack optAuthor) $ map (pack . show) bibAuthor
-     | not $ null optTitle  -> match (pack optTitle) $ stripParens bibTitle
-     | not $ null optYear   -> match (pack optYear) $ stripParens bibYear
-     | not $ null optTag    -> any (match $ pack optTag) bibKeywords
-     | otherwise -> True
+     (null optType   || fromJust optType == entryType)
+  && (null optKey    || match (pack optKey) (stripParens entryKey))
+  && (null optAuthor || any (match $ pack optAuthor) (pack . show <$> bibAuthor))
+  && (null optTitle  || match (pack optTitle) (stripParens bibTitle))
+  && (null optYear   || match (pack optYear) (stripParens bibYear))
+  && (null optTag    || any (match $ pack optTag) bibKeywords)
 trickle _ _ = True
 
 match :: Text -> Text -> Bool
