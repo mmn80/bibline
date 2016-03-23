@@ -52,15 +52,16 @@ instance Read SortOrder where
       _        -> Unsorted
 
 data Options = Options
-  { optType   :: Maybe BibEntryType
-  , optKey    :: String
-  , optAuthor :: String
-  , optTitle  :: String
-  , optYear   :: String
-  , optTag    :: String
-  , optSortBy :: SortOrder
-  , optFormat :: OutputFormat
-  , optOpen   :: Bool
+  { optType    :: Maybe BibEntryType
+  , optKey     :: String
+  , optAuthor  :: String
+  , optTitle   :: String
+  , optYear    :: String
+  , optTag     :: String
+  , optSortBy  :: SortOrder
+  , optFormat  :: OutputFormat
+  , optOpen    :: Bool
+  , optOpenCmd :: String
   }
 
 bibline :: Options -> IO ()
@@ -71,7 +72,7 @@ bibline opt@Options {..} = do
         b <- await
         let f = stripParens $ bibFile b
         lift $ unless (T.null f) $ do
-          _ <- spawnCommand $ "xdg-open \"" ++ T.unpack f ++ "\""
+          _ <- spawnCommand $ optOpenCmd ++ " \"" ++ T.unpack f ++ "\""
           return ()
         yield b
         cat

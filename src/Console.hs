@@ -75,6 +75,12 @@ optsParser = Options
          ( long "open"
         <> short 'o'
         <> help "Open first result's 'file' with 'xdg-open'" )
+     <*> strOption
+         ( long "opencmd"
+        <> value "xdg-open"
+        <> showDefault
+        <> metavar "CMD"
+        <> help "File open command" )
 
 main :: IO ()
 main = execParser opts >>= bibline
