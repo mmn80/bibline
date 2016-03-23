@@ -71,6 +71,10 @@ optsParser = Options
          ( long "bibtex"
         <> short 'b'
         <> help "Enable BibTeX output format" )
+     <*> switch
+         ( long "open"
+        <> short 'o'
+        <> help "Open first result's 'file' with 'xdg-open'" )
 
 main :: IO ()
 main = execParser opts >>= bibline

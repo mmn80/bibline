@@ -34,6 +34,7 @@ library
     pipes,
     pipes-parse,
     pipes-text,
+    process,
     optparse-applicative
   hs-source-dirs:    src
   default-language:  Haskell2010
@@ -49,4 +50,5 @@ executable bibline
     pipes,
     pipes-parse,
     pipes-text,
+    process,
     optparse-applicative

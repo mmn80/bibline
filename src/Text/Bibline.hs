@@ -26,14 +26,15 @@ module Text.Bibline
 import           Control.Monad       (unless)
 import           Data.Maybe          (fromJust)
 import           Data.Text           (Text, pack)
+import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
-import qualified Data.Text        as T
 import           Pipes
 import           Pipes.Parse         (runStateT)
 import qualified Pipes.Prelude       as P
 import qualified Pipes.Text          as PT
 import qualified Pipes.Text.IO       as PT
 import           System.IO           (hPrint, hPutStrLn, stderr)
+import           System.Process      (spawnCommand)
 import           Text.Bibline.Parser
 import           Text.Read           (Lexeme (..), lexP, parens, readPrec)
 
@@ -59,14 +60,24 @@ data Options = Options
   , optTag    :: String
   , optSortBy :: SortOrder
   , optFormat :: OutputFormat
+  , optOpen   :: Bool
   }
 
 bibline :: Options -> IO ()
 bibline opt@Options {..} = do
   let format = if optFormat == Compact then showEntryCompact else show
   let noFilter = null optType && all null [optKey, optAuthor, optTitle, optYear, optTag]
+  let openPipe = do
+        b <- await
+        let f = stripParens $ bibFile b
+        lift $ unless (T.null f) $ do
+          _ <- spawnCommand $ "xdg-open \"" ++ T.unpack f ++ "\""
+          return ()
+        yield b
+        cat
   let pipeline = biblined PT.stdin
              >-> P.filter (if noFilter then const True else trickle opt)
+             >-> (if optOpen then openPipe else cat)
              >-> P.map (pack . format)
   (r, p) <- runEffect $ for pipeline $ liftIO . T.putStr
   unless (r == BibParseResultOk) $ do

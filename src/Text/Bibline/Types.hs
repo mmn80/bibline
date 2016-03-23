@@ -194,6 +194,8 @@ data BibItem =
     , bibYear         :: Text
     -- | Author and user keywords
     , bibKeywords     :: [Text]
+    -- | Local file path (eg: pdf)
+    , bibFile         :: Text
     -- | Non-standard tags
     , bibExtraTags    :: [(Text, Text)]
     }
@@ -237,6 +239,7 @@ instance Show BibItem where
     . tag2Str "volume"       bibVolume
     . tag2Str "year"         bibYear
     . tag2Str "keywords"     (T.intercalate (pack ", ") bibKeywords)
+    . tag2Str "file"         bibFile
     . showString (concat (xtag2str <$> bibExtraTags))
     . showString "\n}\n\n"
     where
@@ -290,4 +293,4 @@ stripParens txt = if T.compareLength txt 2 == GT
 emptyEntry :: BibItem
 emptyEntry = BibEntry empty BibMisc empty empty [] empty empty empty empty []
   empty empty empty empty empty empty empty empty empty empty empty empty empty
-  empty empty empty [] []
+  empty empty empty [] empty []
