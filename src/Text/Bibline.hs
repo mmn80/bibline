@@ -88,14 +88,11 @@ bibline opt@Options {..} = do
   let runPipe p = runEffect $ for (p
               >-> (if optOpen then openFilePipe optOpenCmd else cat)
               >-> P.map format) $ liftIO . T.putStr
-  (r, p) <-
-    if optSortBy == Unsorted
-    then runPipe fp
-    else do
-      (bs, r) <- P.toListM' fp
-      let bs' = sortItems optSortBy optSortOrder bs
-      runPipe $ each bs'
-      return r
+  (r, p) <- if optSortBy == Unsorted then runPipe fp else do
+    (bs, r) <- P.toListM' fp
+    let bs' = sortItems optSortBy optSortOrder bs
+    runPipe $ each bs'
+    return r
   unless (r == BibParseResultOk) $ do
     hPrint stderr r
     (used, p') <- runStateT PT.isEndOfChars p
