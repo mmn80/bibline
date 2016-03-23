@@ -20,6 +20,7 @@ module Text.Bibline
   , SortOrder(..)
   , OutputFormat(..)
   , bibline
+  , match
   ) where
 
 import           Control.Monad       (unless)
@@ -87,9 +88,10 @@ trickle Options {..} BibEntry {..} =
 trickle _ _ = True
 
 match :: Text -> Text -> Bool
-match pat = go pats
+match pat txt = go pats (T.toLower txt)
   where
-    pats = T.groupBy (\c1 c2 -> c1 /= '?' && c2 /= '*') pat
+    wildchar c = c == '?' || c == '*'
+    pats = T.groupBy (\c1 c2 -> not $ wildchar c1 || wildchar c2) (T.toLower pat)
     go ps str = case ps of
           []    -> True
           p:ps' ->
