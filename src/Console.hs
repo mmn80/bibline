@@ -67,6 +67,12 @@ optsParser = Options
         <> value Unsorted
         <> metavar "FIELD"
         <> help "Sort results by FIELD = (title | author | year)" )
+     <*> option auto
+         ( long "sortdir"
+        <> short 'r'
+        <> value SortAsc
+        <> metavar "ORDER"
+        <> help "Sort ORDER = (asc | desc)" )
      <*> flag Compact BibTeX
          ( long "bibtex"
         <> short 'b'
@@ -74,12 +80,12 @@ optsParser = Options
      <*> switch
          ( long "open"
         <> short 'o'
-        <> help "Open first result's 'file' with 'xdg-open'" )
+        <> help "Open first result's 'file' with COMMAND" )
      <*> strOption
          ( long "opencmd"
         <> value "xdg-open"
         <> showDefault
-        <> metavar "CMD"
+        <> metavar "COMMAND"
         <> help "File open command" )
 
 main :: IO ()
@@ -91,5 +97,6 @@ main = execParser opts >>= bibline
                    \sorted list of entries using either BibTeX or a \
                    \compact human friendly format. \
                    \Search strings are case insensitive and wildchars \
-                   \'*' and '?' can be used."
+                   \'*' and '?' can be used. \
+                   \Sorting results will first load them in memory."
      <> header "bibline - utility for processing BibTeX files" )

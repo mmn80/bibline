@@ -17,6 +17,7 @@
 module Text.Bibline
   ( module Text.Bibline.Parser
   , Options(..)
+  , SortField(..)
   , SortOrder(..)
   , OutputFormat(..)
   , bibline
@@ -24,6 +25,8 @@ module Text.Bibline
   ) where
 
 import           Control.Monad       (unless)
+import           Data.Function       (on)
+import           Data.List           (sortBy)
 import           Data.Maybe          (fromJust)
 import           Data.Text           (Text, pack)
 import qualified Data.Text           as T
@@ -40,9 +43,10 @@ import           Text.Read           (Lexeme (..), lexP, parens, readPrec)
 
 data OutputFormat = Compact | BibTeX deriving (Eq)
 
-data SortOrder = Unsorted | SortByTitle | SortByAuthor | SortByYear
+data SortField = Unsorted | SortByTitle | SortByAuthor | SortByYear
+  deriving (Eq)
 
-instance Read SortOrder where
+instance Read SortField where
   readPrec =  parens $ do
     Ident s <- lexP
     return $ case s of
@@ -51,42 +55,70 @@ instance Read SortOrder where
       "year"   -> SortByYear
       _        -> Unsorted
 
+data SortOrder = SortAsc | SortDesc
+  deriving (Eq)
+
+instance Read SortOrder where
+  readPrec =  parens $ do
+    Ident s <- lexP
+    return $ case s of
+      "asc" -> SortAsc
+      _     -> SortDesc
+
 data Options = Options
-  { optType    :: Maybe BibEntryType
-  , optKey     :: String
-  , optAuthor  :: String
-  , optTitle   :: String
-  , optYear    :: String
-  , optTag     :: String
-  , optSortBy  :: SortOrder
-  , optFormat  :: OutputFormat
-  , optOpen    :: Bool
-  , optOpenCmd :: String
+  { optType      :: Maybe BibEntryType
+  , optKey       :: String
+  , optAuthor    :: String
+  , optTitle     :: String
+  , optYear      :: String
+  , optTag       :: String
+  , optSortBy    :: SortField
+  , optSortOrder :: SortOrder
+  , optFormat    :: OutputFormat
+  , optOpen      :: Bool
+  , optOpenCmd   :: String
   }
 
 bibline :: Options -> IO ()
 bibline opt@Options {..} = do
-  let format = if optFormat == Compact then showEntryCompact else show
+  let format = pack . if optFormat == Compact then showEntryCompact else show
   let noFilter = null optType && all null [optKey, optAuthor, optTitle, optYear, optTag]
-  let openPipe = do
-        b <- await
-        let f = stripParens $ bibFile b
-        lift $ unless (T.null f) $ do
-          _ <- spawnCommand $ optOpenCmd ++ " \"" ++ T.unpack f ++ "\""
-          return ()
-        yield b
-        cat
   let pipeline = biblined PT.stdin
              >-> P.filter (if noFilter then const True else trickle opt)
-             >-> (if optOpen then openPipe else cat)
-             >-> P.map (pack . format)
-  (r, p) <- runEffect $ for pipeline $ liftIO . T.putStr
+             >-> (if optOpen then openFilePipe optOpenCmd else cat)
+  (r, p) <-
+    if optSortBy == Unsorted
+    then runEffect $ for (pipeline >-> P.map format) $ liftIO . T.putStr
+    else do
+      (bs, r) <- P.toListM' pipeline
+      let bs' = format <$> sortItems optSortBy optSortOrder bs
+      runEffect $ for (each bs') $ liftIO . T.putStr
+      return r
   unless (r == BibParseResultOk) $ do
     hPrint stderr r
     (used, p') <- runStateT PT.isEndOfChars p
     unless used $ do
       hPutStrLn stderr "Unused input:"
       runEffect $ for p' (liftIO . T.hPutStr stderr)
+
+openFilePipe :: String -> Pipe BibItem BibItem IO r
+openFilePipe cmd = do
+  b <- await
+  let f = stripParens $ bibFile b
+  lift $ unless (T.null f) $ do
+    _ <- spawnCommand $ cmd ++ " \"" ++ T.unpack f ++ "\""
+    return ()
+  yield b
+  cat
+
+sortItems :: SortField -> SortOrder -> [BibItem] -> [BibItem]
+sortItems sf so = sortBy (cmp `on` fld)
+  where cmp = if so == SortAsc then compare else flip compare
+        fld = case sf of
+                SortByAuthor -> T.intercalate (pack " and ")
+                              . map (pack . show) . bibAuthor
+                SortByTitle  -> bibTitle
+                _            -> bibYear
 
 trickle :: Options -> BibItem -> Bool
 trickle Options {..} BibEntry {..} =
