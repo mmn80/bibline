@@ -13,8 +13,9 @@
 
 module Main (main) where
 
-import Options.Applicative
+import Options.Applicative hiding (maybeReader)
 import Text.Bibline
+import Data.Monoid ((<>))
 
 maybeReader :: Read a => ReadM (Maybe a)
 maybeReader = eitherReader $ \arg ->

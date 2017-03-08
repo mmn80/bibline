@@ -52,3 +52,7 @@ executable bibline
     pipes-text,
     process,
     optparse-applicative
+  other-modules:
+    Text.Bibline,
+    Text.Bibline.Types,
+    Text.Bibline.Parser
